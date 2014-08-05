@@ -1,0 +1,44 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/gray_background"
+    tools:context="com.sc.showcal.SearchScreen"
+    tools:ignore="MergeRootFrame" >
+
+    <ScrollView
+        android:id="@+id/scroller"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/gray_background"
+        android:scrollbars="none" >
+
+        <LinearLayout
+            android:id="@+id/scroller_linear_layout_search"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/gray_background"
+            android:orientation="vertical"
+            android:paddingBottom="16dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:paddingTop="54dp" >
+        </LinearLayout>
+    </ScrollView>
+
+    <EditText
+        android:id="@+id/searchBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_margin="8dp"
+        android:background="@drawable/edittext_rounded_corners"
+        android:ems="10"
+        android:gravity="center"
+        android:hint="@string/search"
+        android:maxLines="1"
+        android:padding="8dp"
+        android:scrollHorizontally="true" />
+
+</RelativeLayout>

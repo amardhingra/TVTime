@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="app_color">#99FFCC</color>
+    <color name="gray_background">#EEEEEE</color>
+    <color name="app_color_dark">#7ACCA3</color>
+    <color name="drop_shadow">#DDDDDD</color>
+    <color name="white">#FFFFFF</color>
+    <color name="white_button_down">#F0F0F0</color>
+</resources>

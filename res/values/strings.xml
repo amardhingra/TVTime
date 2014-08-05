@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ShowCal</string>
+    <string name="action_settings">Settings</string>
+    <string name="search">Search</string>
+    <string name="add">Add to My Shows</string>
+    <string name="show_image">Show Image</string>
+    <string name="title_activity_search_screen">SearchScreen</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_single_show_screen">SingleShowScreen</string>
+    <string name="no_shows">Add shows using the\n<b>+</b>\nbutton</string>
+    <string name="more_info">More information</string>
+    <string name="add_to_calender">Add to Calender</string>
+    <string name="delete_show">Delete Show</string>
+    <string name="my_shows">My Shows</string>
+    <string name="future_episodes">Future Episodes</string>
+    <string name="no_more_shows">No Future Episodes</string>
+    <string name="remember_choice">Remember my choice</string>
+
+</resources>
