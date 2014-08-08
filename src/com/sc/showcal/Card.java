@@ -20,9 +20,7 @@ public class Card implements Serializable {
 	ArrayList<Episode> episodes;
 	String posterLink;
 	int numberOfSeasons;
-	long lastUpdated;
-	boolean syncCalender;
-	boolean wasUpdated;
+	boolean addedToCalendar;
 	String TVRageID;
 	transient Bitmap bm;
 
@@ -154,7 +152,6 @@ public class Card implements Serializable {
 			episodes = new ArrayList<Episode>();
 
 		episodes.add(e);
-		this.lastUpdated = System.currentTimeMillis();
 	}
 
 	public ArrayList<Episode> getEpisodes() {
@@ -163,7 +160,6 @@ public class Card implements Serializable {
 
 	public void setEpisodes(ArrayList<Episode> eps) {
 		this.episodes = eps;
-		this.lastUpdated = System.currentTimeMillis();
 	}
 
 }

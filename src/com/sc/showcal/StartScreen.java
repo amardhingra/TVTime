@@ -53,20 +53,13 @@ public class StartScreen extends Activity {
 	// SharedPreferences for the app
 	SharedPreferences prefs;
 
-	// List of strings
-	public final static String PREFS_NAME = "show_cal_prefs";
-	public final static String SEARCH = "http://services.tvrage.com/feeds/search.php?show=";
-	public final static String GET_EPISODES = "http://services.tvrage.com/feeds/episode_list.php?sid=";
-	public final static String OMDB_SEARCH = "http://www.omdbapi.com/?s=";
-	public final static String OMDB_GET_IMDBID = "http://www.omdbapi.com/?i=";
-
 	// date format for tvrage
 	public final static SimpleDateFormat dateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd", Locale.US);
 
 	// Objects to get users calendar choice
 	private CalendarData[] userCalenders;
-	private String calendarId = "0";
+	private String calendarId = "-1";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -79,11 +72,11 @@ public class StartScreen extends Activity {
 
 		// getting the layout inflater and shared preferences
 		inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+		prefs = getSharedPreferences(Strings.PREFS_NAME, Context.MODE_PRIVATE);
 
 		// getting the number of shows and either setting up the cards or
 		// prompting the user to add a show
-		int numberOfShows = prefs.getInt("number_of_shows", 0);
+		int numberOfShows = prefs.getInt(Strings.NUMBER_OF_SHOWS, 0);
 		if (numberOfShows == 0) {
 			pressButton.setVisibility(View.VISIBLE);
 		} else {
@@ -91,7 +84,7 @@ public class StartScreen extends Activity {
 		}
 
 		// Getting the default calender id
-		calendarId = prefs.getString("calender_id", "0");
+		calendarId = prefs.getString(Strings.CALENDAR_ID, "-1");
 
 		Intent intent = new Intent();
 		intent.setAction("com.sc.showcal.APPLICATION_STARTED");
@@ -109,8 +102,8 @@ public class StartScreen extends Activity {
 		super.onResume();
 		// Log.i("com.sc.showcal", "StartScreen onResume()");
 
-		loadCards(prefs.getInt("number_of_shows", 0));
-		prefs.edit().putBoolean("is_running", true).apply();
+		loadCards(prefs.getInt(Strings.NUMBER_OF_SHOWS, 0));
+		prefs.edit().putBoolean(Strings.IS_RUNNING, true).apply();
 	}
 
 	// Save the cards to the outfile when the activity is paused
@@ -118,8 +111,8 @@ public class StartScreen extends Activity {
 	protected void onPause() {
 		super.onPause();
 		// Log.i("com.sc.showcal", "StartScreen onPause()");
-		saveCards();
-		prefs.edit().putBoolean("is_running", false).apply();
+		//saveCards();
+		prefs.edit().putBoolean(Strings.IS_RUNNING, false).apply();
 	}
 
 	/******************************
@@ -182,6 +175,9 @@ public class StartScreen extends Activity {
 	// helper method that deletes the show and all the calendar information
 	private void deleteShow(int position) {
 
+		int currentNumberOfShows = prefs.getInt(Strings.NUMBER_OF_SHOWS, 0);
+		loadCards(currentNumberOfShows);
+		
 		// removing the card from the arraylist of cards
 		Card c = cards.remove(position - 1);
 
@@ -196,8 +192,7 @@ public class StartScreen extends Activity {
 			}
 
 		// reducing the number of shows saved in the apps shared preferences
-		int currentNumberOfShows = prefs.getInt("number_of_shows", 0);
-		prefs.edit().putInt("number_of_shows", currentNumberOfShows - 1)
+		prefs.edit().putInt(Strings.NUMBER_OF_SHOWS, currentNumberOfShows - 1)
 				.apply();
 
 		saveCards();
@@ -205,7 +200,6 @@ public class StartScreen extends Activity {
 
 	}
 
-	// TODO: get calendar choice
 	// method that gets called when user adds the show to their calendar
 	public void addShowToCalender(View v) {
 
@@ -213,45 +207,59 @@ public class StartScreen extends Activity {
 		int position = Integer.parseInt(((TextView) ((TableRow) v.getParent())
 				.findViewById(R.id.position_tv_single_card)).getText()
 				.toString());
-		Card card = cards.get(position - 1);
-		card.syncCalender = true;
 
-		if (prefs.getString("calender_id", "0").equals("0")) {
+		Card card = cards.get(position - 1);
+
+		if (prefs.getString(Strings.CALENDAR_ID, "-1").equals("-1")) {
+			card.addedToCalendar = true;
 			showListView(position);
-		} else
-		// start an asynctask that adds all the episodes to the calendar
-		if (card.wasUpdated)
-			new CalenderAdder().execute(card);
+		} else if (!card.addedToCalendar) {
+			card.addedToCalendar = true;
+			syncCards();
+		}
 	}
 
 	private void showListView(final int position) {
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		builder.setTitle("Select calendar");
-		final String[] items = getCalenders();
+
+		// creating the checkbox view
 		View v = inflater.inflate(R.layout.calendar_selecter, null, false);
 		final CheckBox cb = (CheckBox) v.findViewById(R.id.choice_checkbox);
+
+		// creating an alertdialog builder
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		builder.setTitle("Select calendar");
+
+		// getting a list of calendars and adding it to the alertdialog
+		final String[] items = getCalenders();
+
 		builder.setView(v);
 		builder.setItems(items, new DialogInterface.OnClickListener() {
+
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				System.out.println(which);
-				System.out.println(cb.isChecked());
-				System.out.println(userCalenders[which].id + "");
-				System.out.println(which != items.length - 1);
-				if (which != items.length - 1) {
-					calendarId = userCalenders[which].id + "";
-					if (cb.isChecked()) {
-						prefs.edit()
-								.putString("calender_id",
-										userCalenders[which].id + "").apply();
-					}
-					new CalenderAdder().execute(cards.get(position - 1));
-
-				}
+				calendarId = userCalenders[which].id + "";
+				if (cb.isChecked()) {
+					prefs.edit()
+							.putString(Strings.CALENDAR_ID,
+									userCalenders[which].id + "").apply();
+				} else
+					prefs.edit()
+							.putString(Strings.BACKGROUND_CAL_ID,
+									userCalenders[which].id + "").apply();
+				syncCards();
 			}
 		});
 		AlertDialog alertDialog = builder.create();
 		alertDialog.show();
+	}
+
+	public final void syncCards() {
+		saveCards();
+		prefs.edit().putBoolean(Strings.UPDATED, true).apply();
+		Toast.makeText(getApplicationContext(), "Added to calendar",
+				Toast.LENGTH_SHORT).show();
+		Intent backgroundSync = new Intent(this, BackgroundSync.class);
+		startService(backgroundSync);
 	}
 
 	/****************************************
@@ -283,7 +291,7 @@ public class StartScreen extends Activity {
 		// removing all the views from the scrollview
 		scroller.removeAllViews();
 		try {
-			int numOfShows = prefs.getInt("number_of_shows", 0);
+			int numOfShows = prefs.getInt(Strings.NUMBER_OF_SHOWS, 0);
 			if (numOfShows > 0) {
 
 				// remove the prompt
@@ -307,12 +315,6 @@ public class StartScreen extends Activity {
 					// adding each card to the array list
 					Card c = (Card) ois.readObject();
 					cards.add(c);
-
-					// if the episode list hasn't been updated in over a week
-					// get all the latest episodes
-					if (c.syncCalender && c.wasUpdated) {
-						new CalenderAdder().execute(c);
-					}
 
 					// setting up the views for each card
 					simpleCard = inflater.inflate(R.layout.simple_card, null,
@@ -380,7 +382,7 @@ public class StartScreen extends Activity {
 				Calendars._ID + " ASC");
 
 		// initializing the array of calenders
-		String[] cals = new String[calCursor.getCount() + 1];
+		String[] cals = new String[calCursor.getCount()];
 		userCalenders = new CalendarData[calCursor.getCount()];
 		if (calCursor.moveToFirst()) {
 			int index = 0;
@@ -392,7 +394,6 @@ public class StartScreen extends Activity {
 				userCalenders[index++] = new CalendarData(displayName, id);
 			} while (calCursor.moveToNext());
 		}
-		cals[cals.length - 1] = "None";
 		return cals;
 
 	}
@@ -407,60 +408,58 @@ public class StartScreen extends Activity {
 		@Override
 		protected Integer doInBackground(Card... params) {
 
-			System.out.println(params[0]);
+			Card c = params[0];
+
+			System.out.println("Adding to calendar " + c.title);
 
 			// get the list of episodes
-			ArrayList<Episode> episodes = params[0].getEpisodes();
+			ArrayList<Episode> episodes = c.getEpisodes();
 			boolean addedToCalendar = false;
 			Date currentDate = new Date(System.currentTimeMillis());
-			if (episodes != null)
+			if (episodes != null && episodes.size() > 0)
 				for (Episode episode : episodes) {
 					try {
 						// get the episodes date
 						Date epDate = dateFormat.parse(episode.airDate);
 						// if the episode has not already been added to the
 						// calendar add it
-						if (episode.calenderID != null) {
-							CalendarEditor.deleteEvent(getApplicationContext(),
-									episode.calenderID);
-							episode.calenderID = null;
+
+						if (epDate.compareTo(currentDate) > 0) {
+							String calID = CalendarEditor.addEvent(
+									getApplicationContext(), calendarId,
+									c.title, episode.title, epDate, "Season "
+											+ episode.seasonNumber
+											+ ": Episode "
+											+ episode.episodeNumber);
+							episode.setCalenderID(calID);
+							System.out.println(calID);
+							addedToCalendar = true;
 						}
 
-						if (epDate.compareTo(currentDate) > 0)
-							if (episode.calenderID == null) {
-								String calID = CalendarEditor.addEvent(
-										getApplicationContext(), calendarId,
-										params[0].title, episode.title, epDate,
-										"Season " + episode.seasonNumber
-												+ ": Episode "
-												+ episode.episodeNumber);
-								episode.setCalenderID(calID);
-								addedToCalendar = true;
-							}
-						params[0].wasUpdated = false;
-
+						c.addedToCalendar = true;
+						System.out.println("Added to calendar" + c.title);
 					} catch (ParseException e) {
 						e.printStackTrace();
 					}
 				}
 			else {
-				return Integer.valueOf(0);
+				return Integer.valueOf(1);
 			}
 
 			if (addedToCalendar)
-				return Integer.valueOf(1);
+				return Integer.valueOf(0);
 			else
-				return Integer.valueOf(2);
+				return Integer.valueOf(1);
 		}
 
 		@Override
 		protected void onPostExecute(Integer result) {
 			// Check the result code and make a toast to tell them if the
 			// episodes were added
-			if (result == 1)
+			if (result == 0)
 				Toast.makeText(getApplicationContext(), "Added to calendar",
 						Toast.LENGTH_SHORT).show();
-			else if (result == 0)
+			else if (result == 1)
 				Toast.makeText(getApplicationContext(),
 						"This series has no episodes", Toast.LENGTH_SHORT)
 						.show();

@@ -36,17 +36,23 @@ public class CalendarEditor {
 		values.put(Reminders.MINUTES, 0);
 		context.getContentResolver().insert(Reminders.CONTENT_URI, values);
 
+		//System.out.println("addEvent called " + calURI.getLastPathSegment());
+
+		
 		return calURI.getLastPathSegment();
 	}
 
 	public static void deleteEvent(Context context, String eventID) {
-
+		
 		// setting up the arguments
 		String[] eventArgs = new String[] { eventID };
 		
 		// deleting the event
 		context.getContentResolver().delete(Events.CONTENT_URI, Events._ID + " =? ",
 				eventArgs);
+		
+		//System.out.println("Delete event called " + eventID);
+
 	}
 
 }

@@ -117,10 +117,10 @@ public class SearchScreen extends Activity {
 	public void saveCard(Card newCard) {
 
 		// reading in the shows already saved in memory and updating it
-		SharedPreferences prefs = getSharedPreferences(StartScreen.PREFS_NAME,
+		SharedPreferences prefs = getSharedPreferences(Strings.PREFS_NAME,
 				0);
-		int numberOfShows = prefs.getInt("number_of_shows", 0);
-		prefs.edit().putInt("number_of_shows", numberOfShows + 1).apply();
+		int numberOfShows = prefs.getInt(Strings.NUMBER_OF_SHOWS, 0);
+		prefs.edit().putInt(Strings.NUMBER_OF_SHOWS, numberOfShows + 1).apply();
 
 		cards = new ArrayList<Card>();
 		try {
@@ -216,7 +216,7 @@ public class SearchScreen extends Activity {
 				// create a http connection to OMDB and get the status line
 				HttpClient httpclient = new DefaultHttpClient();
 				HttpResponse response = httpclient.execute(new HttpGet(
-						StartScreen.OMDB_SEARCH + params[0]));
+						Strings.OMDB_SEARCH + params[0]));
 				StatusLine statusLine = response.getStatusLine();
 
 				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
@@ -316,7 +316,7 @@ public class SearchScreen extends Activity {
 		// creating a httpclient to get the information
 		HttpClient httpclient = new DefaultHttpClient();
 		HttpResponse response = httpclient.execute(new HttpGet(
-				StartScreen.OMDB_GET_IMDBID + c.getImdbID()));
+				Strings.OMDB_GET_IMDBID + c.getImdbID()));
 		StatusLine statusLine = response.getStatusLine();
 		if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
 
@@ -369,7 +369,7 @@ public class SearchScreen extends Activity {
 				// Create a http request replacing all spaces in the show name
 				HttpClient httpclient = new DefaultHttpClient();
 				HttpResponse response = httpclient.execute(new HttpGet(
-						StartScreen.SEARCH
+						Strings.SEARCH
 								+ c.getTitle().replaceAll("\n", "")
 										.replaceAll(" ", "%20")));
 				StatusLine statusLine = response.getStatusLine();
@@ -396,6 +396,7 @@ public class SearchScreen extends Activity {
 					while (eventType != XmlPullParser.END_DOCUMENT) {
 
 						if (eventType == XmlPullParser.START_TAG) {
+							
 							String tag = parser.getName();
 
 							// save the last showID we found
@@ -471,7 +472,7 @@ public class SearchScreen extends Activity {
 				// create a http request
 				HttpClient httpclient = new DefaultHttpClient();
 				HttpResponse response = httpclient.execute(new HttpGet(
-						StartScreen.GET_EPISODES + c.getTVRageID()));
+						Strings.GET_EPISODES + c.getTVRageID()));
 				StatusLine statusLine = response.getStatusLine();
 				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
 
@@ -539,9 +540,8 @@ public class SearchScreen extends Activity {
 						}
 						eventType = parser.next();
 					}
-					c.wasUpdated = true;
+					
 					return c;
-
 				}
 
 			} catch (ClientProtocolException e) {
@@ -597,16 +597,16 @@ public class SearchScreen extends Activity {
 	protected void onPause() {
 		super.onPause();
 		// Log.i("com.sc.showcal", "SearchScreen onPause()");
-		getSharedPreferences(StartScreen.PREFS_NAME, 0).edit()
-				.putBoolean("is_running", false).apply();
+		getSharedPreferences(Strings.PREFS_NAME, 0).edit()
+				.putBoolean(Strings.IS_RUNNING, false).apply();
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
 		// Log.i("com.sc.showcal", "SearchScreen onResume()");
-		getSharedPreferences(StartScreen.PREFS_NAME, 0).edit()
-				.putBoolean("is_running", true).apply();
+		getSharedPreferences(Strings.PREFS_NAME, 0).edit()
+				.putBoolean(Strings.IS_RUNNING, true).apply();
 	}
 
 }

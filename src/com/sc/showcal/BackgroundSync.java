@@ -25,7 +25,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.util.Log;
 
 public class BackgroundSync extends IntentService {
 
@@ -36,37 +35,47 @@ public class BackgroundSync extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 
-		SharedPreferences prefs = getSharedPreferences(StartScreen.PREFS_NAME,
-				0);
+		SharedPreferences prefs = getSharedPreferences(Strings.PREFS_NAME, 0);
 
 		ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo mWifi = connManager
 				.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
-		int numberOfShows = getSharedPreferences(StartScreen.PREFS_NAME, 0)
-				.getInt("number_of_shows", 0);
+		int numberOfShows = getSharedPreferences(Strings.PREFS_NAME, 0).getInt(
+				Strings.NUMBER_OF_SHOWS, 0);
 
-		if (mWifi.isConnected() && numberOfShows > 0
-				&& !prefs.getBoolean("is_running", false)) {
+		String calendarId = prefs.getString(Strings.CALENDAR_ID, "-1");
+		if (calendarId.equals("-1"))
+			calendarId = prefs.getString(Strings.BACKGROUND_CAL_ID, "-1");
+
+		System.out.println("Trying background sync");
+
+		if ((mWifi.isConnected() && numberOfShows > 0 && !prefs.getBoolean(
+				Strings.IS_RUNNING, false))
+				|| prefs.getBoolean(Strings.UPDATED, false)) {
+
+			System.out.println("Starting wifi sync");
 
 			try {
 
-				Log.i("com.sc.showcal", "Started background sync");
 				ObjectInputStream ois = new ObjectInputStream(
 						openFileInput("shows.dat"));
 
-				ArrayList<Card> shows = new ArrayList<Card>();
+				ArrayList<Card> cards = new ArrayList<Card>();
 				for (int i = 0; i < numberOfShows; i++)
-					shows.add((Card) ois.readObject());
+					cards.add((Card) ois.readObject());
 
-				for (Card c : shows) {
+				for (Card c : cards) {
+
+					System.out.println("Downloading data for " + c.title);
 
 					ArrayList<Episode> updatedEpisodes = new ArrayList<Episode>();
+					ArrayList<Episode> oldEpisodes = c.getEpisodes();
 
 					// creating a http client
 					HttpClient httpclient = new DefaultHttpClient();
 					HttpResponse response = httpclient.execute(new HttpGet(
-							StartScreen.GET_EPISODES + c.getTVRageID()));
+							Strings.GET_EPISODES + c.getTVRageID()));
 					StatusLine statusLine = response.getStatusLine();
 					if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
 
@@ -93,7 +102,8 @@ public class BackgroundSync extends IntentService {
 
 							if (eventType == XmlPullParser.START_TAG) {
 								String tag = parser.getName();
-								// remember the last episode, airdate and title
+								// remember the last episode, airdate and
+								// title
 								if (tag.equals("seasonnum")) {
 									parser.next();
 									episodeNumber = parser.getText();
@@ -115,17 +125,15 @@ public class BackgroundSync extends IntentService {
 								// increment the season number
 								if (tag.equals("Season")) {
 									seasonNumber++;
-								} // if we are at the end of a future episode
-									// add // it // to // the arraylist else
-								if (tag.equals("episode")) {
+								}
+								// if we are at the end of a future
+								// episode add it to the arraylist
+								else if (tag.equals("episode")) {
 									if (StartScreen.dateFormat.parse(airdate)
 											.compareTo(currentDate) > 0) {
 										Episode e = new Episode(title, airdate,
 												seasonNumber,
 												Integer.parseInt(episodeNumber));
-										for(Episode ep:c.episodes)
-											if(ep.airDate != null && ep.airDate.equals(e.airDate))
-												e.calenderID = ep.calenderID;
 										updatedEpisodes.add(e);
 									}
 								}
@@ -133,18 +141,46 @@ public class BackgroundSync extends IntentService {
 							eventType = parser.next();
 						}
 
+						if (c.addedToCalendar && updatedEpisodes.size() > 0
+								&& !calendarId.equals("-1")) {
+
+							System.out.println("Changine calendar events for "
+									+ c.title);
+
+							for (Episode e : oldEpisodes) {
+								if (e.calenderID != null) {
+									CalendarEditor.deleteEvent(
+											getApplicationContext(),
+											e.getCalenderID());
+								}
+							}
+
+							for (Episode e : updatedEpisodes) {
+								Date epDate = StartScreen.dateFormat
+										.parse(e.airDate);
+								String calId = CalendarEditor.addEvent(
+										getApplicationContext(), calendarId,
+										c.title, e.title, epDate, "Season "
+												+ e.seasonNumber + ": Episode "
+												+ e.episodeNumber);
+								e.setCalenderID(calId);
+							}
+
+							c.setEpisodes(updatedEpisodes);
+
+						}
+
 						// save the new arraylist to the card
-						c.setEpisodes(updatedEpisodes);
-						c.lastUpdated = System.currentTimeMillis();
-						c.wasUpdated = true;
 
 						ObjectOutputStream oos = new ObjectOutputStream(
 								openFileOutput("shows.dat", 0));
-						for (Card crd : shows)
+
+						for (Card crd : cards)
 							oos.writeObject(crd);
 						oos.flush();
 						oos.close();
 
+						prefs.edit().putBoolean(Strings.UPDATED, false).apply();
 					}
 				}
 
@@ -161,6 +197,7 @@ public class BackgroundSync extends IntentService {
 			} catch (XmlPullParserException e) {
 				e.printStackTrace();
 			}
+
 		}
 	}
 }
