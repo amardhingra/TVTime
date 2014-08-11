@@ -19,6 +19,7 @@ public class Card implements Serializable {
 	String posterLink;
 	int numberOfSeasons;
 	boolean addedToCalendar;
+	boolean inCalendar = false;
 	String TVRageID;
 	long offset;
 	long runtime;

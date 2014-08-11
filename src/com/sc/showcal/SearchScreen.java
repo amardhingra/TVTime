@@ -360,7 +360,7 @@ public class SearchScreen extends Activity {
 		protected void onPreExecute() {
 			// Tell the user the show is being added
 			Toast.makeText(getApplicationContext(),
-					"Adding to your shows. Please wait", Toast.LENGTH_LONG)
+					"Adding to your shows. Please wait", Toast.LENGTH_SHORT)
 					.show();
 		}
 

@@ -49,13 +49,13 @@ public class BackgroundSync extends IntentService {
 		String calendarId = prefs.getString(Strings.CALENDAR_ID, "-1");
 		if (calendarId.equals("-1"))
 			calendarId = prefs.getString(Strings.BACKGROUND_CAL_ID, "-1");
-		
+
 		if ((mWifi.isConnected() && numberOfShows > 0 && !prefs.getBoolean(
 				Strings.IS_RUNNING, false))
 				|| prefs.getBoolean(Strings.UPDATED, false)) {
 
 			try {
-				
+
 				ObjectInputStream ois = new ObjectInputStream(
 						openFileInput("shows.dat"));
 
@@ -65,118 +65,139 @@ public class BackgroundSync extends IntentService {
 
 				for (Card c : cards) {
 
-					ArrayList<Episode> updatedEpisodes = new ArrayList<Episode>();
-					ArrayList<Episode> oldEpisodes = c.getEpisodes();
+					if (!c.inCalendar && c.addedToCalendar) {
+						for (Episode e : c.episodes) {
+							Date epDate = StartScreen.dateFormat
+									.parse(e.airDate);
+							String calId = CalendarEditor.addEvent(
+									getApplicationContext(), calendarId,
+									c.title, e.title, epDate, c.offset,
+									c.runtime, "Season " + e.seasonNumber
+											+ ": Episode " + e.episodeNumber);
+							e.setCalenderID(calId);
+						}
+						
+						c.inCalendar = true;
 
-					// creating a http client
-					HttpClient httpclient = new DefaultHttpClient();
-					HttpResponse response = httpclient.execute(new HttpGet(
-							Strings.GET_EPISODES + c.getTVRageID()));
-					StatusLine statusLine = response.getStatusLine();
-					if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
+					} else {
 
-						// creating an xml pull parser to parse the data
-						XmlPullParserFactory factory = XmlPullParserFactory
-								.newInstance();
-						factory.setNamespaceAware(true);
-						XmlPullParser parser = factory.newPullParser();
-						parser.setInput(new InputStreamReader(new ByteArrayInputStream(
-								buildString(response).getBytes())));
+						ArrayList<Episode> updatedEpisodes = new ArrayList<Episode>();
+						ArrayList<Episode> oldEpisodes = c.getEpisodes();
 
-						// data we want to update
-						String airdate = "";
-						String episodeNumber = "";
-						String title = "";
-						int seasonNumber = 1;
+						// creating a http client
+						HttpClient httpclient = new DefaultHttpClient();
+						HttpResponse response = httpclient.execute(new HttpGet(
+								Strings.GET_EPISODES + c.getTVRageID()));
+						StatusLine statusLine = response.getStatusLine();
+						if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
 
-						// current date
-						Date currentDate = new Date(System.currentTimeMillis());
+							// creating an xml pull parser to parse the data
+							XmlPullParserFactory factory = XmlPullParserFactory
+									.newInstance();
+							factory.setNamespaceAware(true);
+							XmlPullParser parser = factory.newPullParser();
+							parser.setInput(new InputStreamReader(
+									new ByteArrayInputStream(buildString(
+											response).getBytes())));
 
-						int eventType = parser.getEventType();
+							// data we want to update
+							String airdate = "";
+							String episodeNumber = "";
+							String title = "";
+							int seasonNumber = 1;
 
-						while (eventType != XmlPullParser.END_DOCUMENT) {
+							// current date
+							Date currentDate = new Date(
+									System.currentTimeMillis());
 
-							if (eventType == XmlPullParser.START_TAG) {
-								String tag = parser.getName();
-								// remember the last episode, airdate and
-								// title
-								if (tag.equals("seasonnum")) {
-									parser.next();
-									episodeNumber = parser.getText();
-								} else if (tag.equals("airdate")) {
-									parser.next();
-									airdate = parser.getText();
-								} else if (tag.equals("title")) {
-									parser.next();
-									title = parser.getText();
-								}
-								// break if we reach a special episode
-								else if (tag.equals("Special")) {
-									break;
-								}
+							int eventType = parser.getEventType();
 
-							} else if (eventType == XmlPullParser.END_TAG) {
-								String tag = parser.getName();
+							while (eventType != XmlPullParser.END_DOCUMENT) {
 
-								// increment the season number
-								if (tag.equals("Season")) {
-									seasonNumber++;
-								}
-								// if we are at the end of a future
-								// episode add it to the arraylist
-								else if (tag.equals("episode")) {
-									if (StartScreen.dateFormat.parse(airdate)
-											.compareTo(currentDate) > 0) {
-										Episode e = new Episode(title, airdate,
-												seasonNumber,
-												Integer.parseInt(episodeNumber));
-										updatedEpisodes.add(e);
+								if (eventType == XmlPullParser.START_TAG) {
+									String tag = parser.getName();
+									// remember the last episode, airdate and
+									// title
+									if (tag.equals("seasonnum")) {
+										parser.next();
+										episodeNumber = parser.getText();
+									} else if (tag.equals("airdate")) {
+										parser.next();
+										airdate = parser.getText();
+									} else if (tag.equals("title")) {
+										parser.next();
+										title = parser.getText();
+									}
+									// break if we reach a special episode
+									else if (tag.equals("Special")) {
+										break;
+									}
+
+								} else if (eventType == XmlPullParser.END_TAG) {
+									String tag = parser.getName();
+
+									// increment the season number
+									if (tag.equals("Season")) {
+										seasonNumber++;
+									}
+									// if we are at the end of a future
+									// episode add it to the arraylist
+									else if (tag.equals("episode")) {
+										if (StartScreen.dateFormat.parse(
+												airdate).compareTo(currentDate) > 0) {
+											Episode e = new Episode(
+													title,
+													airdate,
+													seasonNumber,
+													Integer.parseInt(episodeNumber));
+											updatedEpisodes.add(e);
+										}
 									}
 								}
+								eventType = parser.next();
 							}
-							eventType = parser.next();
-						}
 
-						if (c.addedToCalendar && updatedEpisodes.size() > 0
-								&& !calendarId.equals("-1")) {
+							if (c.addedToCalendar && updatedEpisodes.size() > 0
+									&& !calendarId.equals("-1")) {
 
-							if (oldEpisodes != null)
-								for (Episode e : oldEpisodes) {
-									if (e.calenderID != null) {
-										CalendarEditor.deleteEvent(
-												getApplicationContext(),
-												e.getCalenderID());
+								if (oldEpisodes != null)
+									for (Episode e : oldEpisodes) {
+										if (e.calenderID != null) {
+											CalendarEditor.deleteEvent(
+													getApplicationContext(),
+													e.getCalenderID());
+										}
 									}
+
+								for (Episode e : updatedEpisodes) {
+									Date epDate = StartScreen.dateFormat
+											.parse(e.airDate);
+									String calId = CalendarEditor.addEvent(
+											getApplicationContext(),
+											calendarId, c.title, e.title,
+											epDate, c.offset, c.runtime,
+											"Season " + e.seasonNumber
+													+ ": Episode "
+													+ e.episodeNumber);
+									e.setCalenderID(calId);
 								}
 
-							for (Episode e : updatedEpisodes) {
-								Date epDate = StartScreen.dateFormat
-										.parse(e.airDate);
-								String calId = CalendarEditor.addEvent(
-										getApplicationContext(), calendarId,
-										c.title, e.title, epDate, c.offset,
-										c.runtime, "Season " + e.seasonNumber
-												+ ": Episode "
-												+ e.episodeNumber);
-								e.setCalenderID(calId);
+								c.setEpisodes(updatedEpisodes);
+
 							}
-
-							c.setEpisodes(updatedEpisodes);
-
 						}
-
-						ObjectOutputStream oos = new ObjectOutputStream(
-								openFileOutput("shows.dat", 0));
-
-						for (Card crd : cards)
-							oos.writeObject(crd);
-						oos.flush();
-						oos.close();
-
-						prefs.edit().putBoolean(Strings.UPDATED, false).apply();
-
 					}
 				}
+
+				ObjectOutputStream oos = new ObjectOutputStream(openFileOutput(
+						"shows.dat", 0));
+
+				for (Card crd : cards)
+					oos.writeObject(crd);
+				oos.flush();
+				oos.close();
+
+				prefs.edit().putBoolean(Strings.UPDATED, false).apply();
 
 			} catch (ClientProtocolException e) {
 				e.printStackTrace();
@@ -194,7 +215,7 @@ public class BackgroundSync extends IntentService {
 
 		}
 	}
-	
+
 	public String buildString(HttpResponse response)
 			throws IllegalStateException, IOException {
 		// create a buffered reader and build a string from the input
