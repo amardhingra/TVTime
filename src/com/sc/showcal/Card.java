@@ -11,7 +11,6 @@ public class Card implements Serializable {
 	String title;
 	String years;
 	String rated;
-	String runtime;
 	String imdbID;
 	String type;
 	String plot;
@@ -22,6 +21,8 @@ public class Card implements Serializable {
 	int numberOfSeasons;
 	boolean addedToCalendar;
 	String TVRageID;
+	long offset;
+	long runtime;
 	transient Bitmap bm;
 
 	public Card(String title, String imdbID, String years, String type) {
@@ -31,6 +32,23 @@ public class Card implements Serializable {
 			years += "Present";
 		this.years = years;
 		this.type = type;
+	}
+
+	public Card(String title, String year, String plot, long offset, long runTime,
+			String TVRageID, String poster) {
+		this.title = title;
+		this.years = year + "-Present";
+		this.plot = plot;
+		this.runtime = runTime;
+		this.offset = offset;
+		this.TVRageID = TVRageID;
+		this.posterLink = smallPoster(poster);
+	}
+	
+	private String smallPoster(String poster){
+		String[] split = poster.split(".jpg");
+		
+		return split[0] + "-300.jpg";
 	}
 
 	public String getTitle() {
@@ -75,15 +93,7 @@ public class Card implements Serializable {
 	public void setRated(String rated) {
 		this.rated = rated;
 	}
-
-	public String getRuntime() {
-		return runtime;
-	}
-
-	public void setRuntime(String runtime) {
-		this.runtime = runtime;
-	}
-
+	
 	public String getPlot() {
 		return plot;
 	}

@@ -6,10 +6,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StreamCorruptedException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Locale;
 
 import android.app.Activity;
@@ -21,10 +19,8 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.CalendarContract.Calendars;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -36,7 +32,6 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-@SuppressWarnings("unused")
 public class StartScreen extends Activity {
 
 	ArrayList<Card> cards;
@@ -100,8 +95,6 @@ public class StartScreen extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		// Log.i("com.sc.showcal", "StartScreen onResume()");
-
 		loadCards(prefs.getInt(Strings.NUMBER_OF_SHOWS, 0));
 		prefs.edit().putBoolean(Strings.IS_RUNNING, true).apply();
 	}
@@ -110,8 +103,6 @@ public class StartScreen extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// Log.i("com.sc.showcal", "StartScreen onPause()");
-		//saveCards();
 		prefs.edit().putBoolean(Strings.IS_RUNNING, false).apply();
 	}
 
@@ -395,75 +386,6 @@ public class StartScreen extends Activity {
 			} while (calCursor.moveToNext());
 		}
 		return cals;
-
-	}
-
-	/********************
-	 * CALENDAR ADDER
-	 ********************/
-
-	// ASyncTask to add all the episodes of a show to the users calendar
-	public class CalenderAdder extends AsyncTask<Card, Void, Integer> {
-
-		@Override
-		protected Integer doInBackground(Card... params) {
-
-			Card c = params[0];
-
-			System.out.println("Adding to calendar " + c.title);
-
-			// get the list of episodes
-			ArrayList<Episode> episodes = c.getEpisodes();
-			boolean addedToCalendar = false;
-			Date currentDate = new Date(System.currentTimeMillis());
-			if (episodes != null && episodes.size() > 0)
-				for (Episode episode : episodes) {
-					try {
-						// get the episodes date
-						Date epDate = dateFormat.parse(episode.airDate);
-						// if the episode has not already been added to the
-						// calendar add it
-
-						if (epDate.compareTo(currentDate) > 0) {
-							String calID = CalendarEditor.addEvent(
-									getApplicationContext(), calendarId,
-									c.title, episode.title, epDate, "Season "
-											+ episode.seasonNumber
-											+ ": Episode "
-											+ episode.episodeNumber);
-							episode.setCalenderID(calID);
-							System.out.println(calID);
-							addedToCalendar = true;
-						}
-
-						c.addedToCalendar = true;
-						System.out.println("Added to calendar" + c.title);
-					} catch (ParseException e) {
-						e.printStackTrace();
-					}
-				}
-			else {
-				return Integer.valueOf(1);
-			}
-
-			if (addedToCalendar)
-				return Integer.valueOf(0);
-			else
-				return Integer.valueOf(1);
-		}
-
-		@Override
-		protected void onPostExecute(Integer result) {
-			// Check the result code and make a toast to tell them if the
-			// episodes were added
-			if (result == 0)
-				Toast.makeText(getApplicationContext(), "Added to calendar",
-						Toast.LENGTH_SHORT).show();
-			else if (result == 1)
-				Toast.makeText(getApplicationContext(),
-						"This series has no episodes", Toast.LENGTH_SHORT)
-						.show();
-		}
 
 	}
 

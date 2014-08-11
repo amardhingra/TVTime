@@ -52,6 +52,8 @@
                 android:background="@android:color/white"
                 android:fontFamily="sans-serif-light"
                 android:padding="12dp"
+                android:maxLines="5"
+                android:ellipsize="end"
                 android:textAppearance="?android:attr/textAppearanceSmall" />
         </TableLayout>
 

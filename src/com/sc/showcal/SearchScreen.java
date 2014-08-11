@@ -9,8 +9,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StreamCorruptedException;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -96,7 +99,7 @@ public class SearchScreen extends Activity {
 				.getText().toString());
 
 		// get the TVRage ID of the show
-		new IDServCon().execute(cards.get(position));
+		new EpisodesServCon().execute(cards.get(position));
 	}
 
 	/******************************
@@ -117,8 +120,7 @@ public class SearchScreen extends Activity {
 	public void saveCard(Card newCard) {
 
 		// reading in the shows already saved in memory and updating it
-		SharedPreferences prefs = getSharedPreferences(Strings.PREFS_NAME,
-				0);
+		SharedPreferences prefs = getSharedPreferences(Strings.PREFS_NAME, 0);
 		int numberOfShows = prefs.getInt(Strings.NUMBER_OF_SHOWS, 0);
 		prefs.edit().putInt(Strings.NUMBER_OF_SHOWS, numberOfShows + 1).apply();
 
@@ -155,7 +157,7 @@ public class SearchScreen extends Activity {
 	}
 
 	/*************************
-	 * SEARC BOX TEXTWATCHER
+	 * SEARCH BOX TEXTWATCHER
 	 *************************/
 
 	// Textwatcher that starts a search every time the user hits enter
@@ -191,10 +193,9 @@ public class SearchScreen extends Activity {
 	};
 
 	/*************************
-	 * OMDB SEARCH ASYNCTASK
+	 * TRAKKR SEARCH ASYNCTASK
 	 *************************/
 
-	// ASyncTask that searches the OMDB database
 	public class SearchServCon extends AsyncTask<String, Card, Void> {
 
 		@Override
@@ -216,32 +217,45 @@ public class SearchScreen extends Activity {
 				// create a http connection to OMDB and get the status line
 				HttpClient httpclient = new DefaultHttpClient();
 				HttpResponse response = httpclient.execute(new HttpGet(
-						Strings.OMDB_SEARCH + params[0]));
+						Strings.TRAKKR_SEARCH + params[0]));
 				StatusLine statusLine = response.getStatusLine();
 
 				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
 
 					// create a JSONObject from the input
-					JSONObject jObject = new JSONObject(buildString(response));
+					// JSONObject jObject = new
+					// JSONObject(buildString(response));
 					// get an array of the search results
-					JSONArray jArray = jObject.getJSONArray("Search");
+					// JSONArray jArray = jObject.getJSONArray("Search");
 
+					JSONArray jArray = new JSONArray(buildString(response));
+					SimpleDateFormat timeFormat = new SimpleDateFormat("h:mma");
+					Calendar cal = Calendar.getInstance();
 					for (int i = 0; i < jArray.length(); i++) {
 
 						// get each seatch result and
-						jObject = jArray.getJSONObject(i);
+						JSONObject jObject = jArray.getJSONObject(i);
 
-						// if the result was a tv series create a card and get
-						// more information
-						String type = jObject.getString("Type");
-						if (type.equals("series")) {
-							Card c = new Card(jObject.getString("Title"),
-									jObject.getString("imdbID"),
-									jObject.getString("Year"),
-									jObject.getString("Type"));
+						if (!jObject.getBoolean("ended")) {
+							String title = jObject.getString("title");
+							String year = jObject.getString("year");
+							String plot = jObject.getString("overview");
 
-							addInformation(c);
+							cal.setTime(timeFormat.parse(jObject
+									.getString("air_time")));
+							long offset = cal.getTimeInMillis() + 19800000;
+							long runTime = jObject.getInt("runtime") * 60 * 1000;
+							
+							String TVRageID = jObject.getString("tvrage_id");
+
+							String poster = jObject.getJSONObject("images")
+									.getString("poster");
+
+							Card c = new Card(title, year, plot, offset, runTime,
+									TVRageID, poster);
+							getImage(c);
 							publishProgress(c);
+
 						}
 					}
 
@@ -252,9 +266,12 @@ public class SearchScreen extends Activity {
 				e.printStackTrace();
 			} catch (JSONException e) {
 				e.printStackTrace();
+			} catch (ParseException e) {
+				e.printStackTrace();
 			}
 
 			return null;
+
 		}
 
 		@Override
@@ -293,6 +310,20 @@ public class SearchScreen extends Activity {
 
 	}
 
+	public void getImage(Card c) throws ClientProtocolException, IOException {
+		// Downloading the image and saving it to the card
+		if (c.getPosterLink().contains(".jpg")) {
+			HttpResponse newResponse = new DefaultHttpClient()
+					.execute(new HttpGet(c.getPosterLink()));
+			StatusLine newStatusLine = newResponse.getStatusLine();
+			if (newStatusLine.getStatusCode() == HttpStatus.SC_OK) {
+				Bitmap bm = BitmapFactory.decodeStream(newResponse.getEntity()
+						.getContent());
+				c.setBitmap(bm);
+			}
+		}
+	}
+	
 	public String buildString(HttpResponse response)
 			throws IllegalStateException, IOException {
 		// create a buffered reader and build a string from the input
@@ -309,152 +340,6 @@ public class SearchScreen extends Activity {
 		return sb.toString();
 	}
 
-	// method for getting more information about the show from omdb
-	private void addInformation(Card c) throws ClientProtocolException,
-			IOException, JSONException {
-
-		// creating a httpclient to get the information
-		HttpClient httpclient = new DefaultHttpClient();
-		HttpResponse response = httpclient.execute(new HttpGet(
-				Strings.OMDB_GET_IMDBID + c.getImdbID()));
-		StatusLine statusLine = response.getStatusLine();
-		if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-
-			// creating a JSONObject from the response
-			JSONObject jObject = new JSONObject(buildString(response));
-
-			// Adding the data to the card
-			c.setActors(jObject.getString("Actors").split(","));
-			c.setRated(jObject.getString("Rated"));
-			c.setGenres(jObject.getString("Genre").split(","));
-			c.setPlot(jObject.getString("Plot"));
-			c.setPosterLink(jObject.getString("Poster"));
-			c.setRuntime(jObject.getString("Runtime"));
-
-			// Downloading the image and saving it to the card
-			if (c.getPosterLink().contains(".jpg")) {
-				HttpResponse newResponse = httpclient.execute(new HttpGet(c
-						.getPosterLink()));
-				StatusLine newStatusLine = newResponse.getStatusLine();
-				if (newStatusLine.getStatusCode() == HttpStatus.SC_OK) {
-					Bitmap bm = BitmapFactory.decodeStream(newResponse
-							.getEntity().getContent());
-					c.setBitmap(bm);
-				}
-			}
-		}
-	}
-
-	/*************************
-	 * TVRAGE ID ASYNCTASK
-	 *************************/
-
-	// ASyncTask for getting the TVRage ID
-	public class IDServCon extends AsyncTask<Card, Void, Card> {
-
-		@Override
-		protected void onPreExecute() {
-			// Tell the user the show is being added
-			Toast.makeText(getApplicationContext(),
-					"Adding to your shows. Please wait", Toast.LENGTH_LONG)
-					.show();
-		}
-
-		@Override
-		protected Card doInBackground(Card... params) {
-			try {
-
-				Card c = params[0];
-
-				// Create a http request replacing all spaces in the show name
-				HttpClient httpclient = new DefaultHttpClient();
-				HttpResponse response = httpclient.execute(new HttpGet(
-						Strings.SEARCH
-								+ c.getTitle().replaceAll("\n", "")
-										.replaceAll(" ", "%20")));
-				StatusLine statusLine = response.getStatusLine();
-				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-
-					// create an xml pull parser to decode the input
-					XmlPullParserFactory factory = XmlPullParserFactory
-							.newInstance();
-					factory.setNamespaceAware(true);
-					XmlPullParser parser = factory.newPullParser();
-					parser.setInput(new InputStreamReader(response.getEntity()
-							.getContent()));
-
-					// boolean for whether we have found the show we are looking
-					// for
-					boolean foundShow = false;
-
-					// fields we want to save
-					String showID = "";
-					String seasons = "";
-
-					// go through the input until we reach the end
-					int eventType = parser.getEventType();
-					while (eventType != XmlPullParser.END_DOCUMENT) {
-
-						if (eventType == XmlPullParser.START_TAG) {
-							
-							String tag = parser.getName();
-
-							// save the last showID we found
-							if (tag.equals("showid")) {
-								parser.next();
-								showID = parser.getText();
-							}
-							// if the name matches the name from omdb we have
-							// found the same show
-							else if (tag.equals("name")) {
-								parser.next();
-								if (parser.getText().equalsIgnoreCase(
-										c.getTitle()))
-									foundShow = true;
-							} else if (tag.equals("seasons")) {
-								// save the last number of seasons we found
-								parser.next();
-								seasons = parser.getText();
-							}
-
-						} else if (eventType == XmlPullParser.END_TAG) {
-
-							// if we have reached the end of a show and
-							// we found the show we were looking for break
-							String tag = parser.getName();
-							if (tag.equals("show") && foundShow) {
-								c.setTVRageID(showID);
-								c.setNumberOfSeasons(Integer.parseInt(seasons));
-								break;
-							}
-						} else if (eventType == XmlPullParser.TEXT) {
-						}
-						eventType = parser.next();
-					}
-
-					// return the card so we can get the episode list details
-					return c;
-				}
-
-			} catch (ClientProtocolException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (XmlPullParserException e) {
-				e.printStackTrace();
-			}
-
-			return null;
-		}
-
-		@Override
-		protected void onPostExecute(Card c) {
-			// once we have the show ID get the episode list
-			new EpisodesServCon().execute(c);
-		}
-
-	}
-
 	/*************************
 	 * EPISODE LIST ASYNCTASK
 	 *************************/
@@ -463,9 +348,17 @@ public class SearchScreen extends Activity {
 	public class EpisodesServCon extends AsyncTask<Card, Void, Card> {
 
 		@Override
+		protected void onPreExecute() {
+			// Tell the user the show is being added
+			Toast.makeText(getApplicationContext(),
+					"Adding to your shows. Please wait", Toast.LENGTH_LONG)
+					.show();
+		}
+		
+		@Override
 		protected Card doInBackground(Card... params) {
 			try {
-
+								
 				// get the relevant card
 				Card c = params[0];
 
@@ -540,7 +433,7 @@ public class SearchScreen extends Activity {
 						}
 						eventType = parser.next();
 					}
-					
+
 					return c;
 				}
 

@@ -48,13 +48,9 @@ public class BackgroundSync extends IntentService {
 		if (calendarId.equals("-1"))
 			calendarId = prefs.getString(Strings.BACKGROUND_CAL_ID, "-1");
 
-		System.out.println("Trying background sync");
-
 		if ((mWifi.isConnected() && numberOfShows > 0 && !prefs.getBoolean(
 				Strings.IS_RUNNING, false))
 				|| prefs.getBoolean(Strings.UPDATED, false)) {
-
-			System.out.println("Starting wifi sync");
 
 			try {
 
@@ -66,9 +62,7 @@ public class BackgroundSync extends IntentService {
 					cards.add((Card) ois.readObject());
 
 				for (Card c : cards) {
-
-					System.out.println("Downloading data for " + c.title);
-
+					
 					ArrayList<Episode> updatedEpisodes = new ArrayList<Episode>();
 					ArrayList<Episode> oldEpisodes = c.getEpisodes();
 
@@ -144,9 +138,6 @@ public class BackgroundSync extends IntentService {
 						if (c.addedToCalendar && updatedEpisodes.size() > 0
 								&& !calendarId.equals("-1")) {
 
-							System.out.println("Changine calendar events for "
-									+ c.title);
-
 							for (Episode e : oldEpisodes) {
 								if (e.calenderID != null) {
 									CalendarEditor.deleteEvent(
@@ -160,7 +151,7 @@ public class BackgroundSync extends IntentService {
 										.parse(e.airDate);
 								String calId = CalendarEditor.addEvent(
 										getApplicationContext(), calendarId,
-										c.title, e.title, epDate, "Season "
+										c.title, e.title, epDate, c.offset, c.runtime, "Season "
 												+ e.seasonNumber + ": Episode "
 												+ e.episodeNumber);
 								e.setCalenderID(calId);

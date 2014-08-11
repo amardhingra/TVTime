@@ -8,6 +8,7 @@ public class Strings {
 	public final static String GET_EPISODES = "http://services.tvrage.com/feeds/episode_list.php?sid=";
 	public final static String OMDB_SEARCH = "http://www.omdbapi.com/?s=";
 	public final static String OMDB_GET_IMDBID = "http://www.omdbapi.com/?i=";
+	public final static String TRAKKR_SEARCH = "http://api.trakt.tv/search/shows.json/a90ebe1530c287edb1b7cb7dadfae389?query=";
 
 	// SharedPreference tags
 	public final static String CALENDAR_ID = "calender_id";

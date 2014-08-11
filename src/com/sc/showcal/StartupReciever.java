@@ -13,7 +13,6 @@ public class StartupReciever extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent i) {
 
-		System.out.println("Checking for alarm");
 		
 		Intent intent = new Intent(context, BackgroundSync.class);
 		intent.setAction("com.sc.showcal.BACKGROUND_SYNC");
@@ -23,7 +22,6 @@ public class StartupReciever extends BroadcastReceiver {
 
 		if (!alarmUp) {
 
-			System.out.println("Started alarm");
 			
 			PendingIntent pintent = PendingIntent.getService(context, 0,
 					intent, 0);
