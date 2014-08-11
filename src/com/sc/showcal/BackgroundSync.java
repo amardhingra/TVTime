@@ -1,5 +1,7 @@
 package com.sc.showcal;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -47,13 +49,13 @@ public class BackgroundSync extends IntentService {
 		String calendarId = prefs.getString(Strings.CALENDAR_ID, "-1");
 		if (calendarId.equals("-1"))
 			calendarId = prefs.getString(Strings.BACKGROUND_CAL_ID, "-1");
-
+		
 		if ((mWifi.isConnected() && numberOfShows > 0 && !prefs.getBoolean(
 				Strings.IS_RUNNING, false))
 				|| prefs.getBoolean(Strings.UPDATED, false)) {
 
 			try {
-
+				
 				ObjectInputStream ois = new ObjectInputStream(
 						openFileInput("shows.dat"));
 
@@ -62,7 +64,7 @@ public class BackgroundSync extends IntentService {
 					cards.add((Card) ois.readObject());
 
 				for (Card c : cards) {
-					
+
 					ArrayList<Episode> updatedEpisodes = new ArrayList<Episode>();
 					ArrayList<Episode> oldEpisodes = c.getEpisodes();
 
@@ -78,8 +80,8 @@ public class BackgroundSync extends IntentService {
 								.newInstance();
 						factory.setNamespaceAware(true);
 						XmlPullParser parser = factory.newPullParser();
-						parser.setInput(new InputStreamReader(response
-								.getEntity().getContent()));
+						parser.setInput(new InputStreamReader(new ByteArrayInputStream(
+								buildString(response).getBytes())));
 
 						// data we want to update
 						String airdate = "";
@@ -138,21 +140,23 @@ public class BackgroundSync extends IntentService {
 						if (c.addedToCalendar && updatedEpisodes.size() > 0
 								&& !calendarId.equals("-1")) {
 
-							for (Episode e : oldEpisodes) {
-								if (e.calenderID != null) {
-									CalendarEditor.deleteEvent(
-											getApplicationContext(),
-											e.getCalenderID());
+							if (oldEpisodes != null)
+								for (Episode e : oldEpisodes) {
+									if (e.calenderID != null) {
+										CalendarEditor.deleteEvent(
+												getApplicationContext(),
+												e.getCalenderID());
+									}
 								}
-							}
 
 							for (Episode e : updatedEpisodes) {
 								Date epDate = StartScreen.dateFormat
 										.parse(e.airDate);
 								String calId = CalendarEditor.addEvent(
 										getApplicationContext(), calendarId,
-										c.title, e.title, epDate, c.offset, c.runtime, "Season "
-												+ e.seasonNumber + ": Episode "
+										c.title, e.title, epDate, c.offset,
+										c.runtime, "Season " + e.seasonNumber
+												+ ": Episode "
 												+ e.episodeNumber);
 								e.setCalenderID(calId);
 							}
@@ -160,8 +164,6 @@ public class BackgroundSync extends IntentService {
 							c.setEpisodes(updatedEpisodes);
 
 						}
-
-						// save the new arraylist to the card
 
 						ObjectOutputStream oos = new ObjectOutputStream(
 								openFileOutput("shows.dat", 0));
@@ -172,6 +174,7 @@ public class BackgroundSync extends IntentService {
 						oos.close();
 
 						prefs.edit().putBoolean(Strings.UPDATED, false).apply();
+
 					}
 				}
 
@@ -190,5 +193,21 @@ public class BackgroundSync extends IntentService {
 			}
 
 		}
+	}
+	
+	public String buildString(HttpResponse response)
+			throws IllegalStateException, IOException {
+		// create a buffered reader and build a string from the input
+		BufferedReader reader = new BufferedReader(new InputStreamReader(
+				response.getEntity().getContent()));
+
+		// read lines appending them to a string builder
+		StringBuilder sb = new StringBuilder();
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+			sb.append(line + "\n");
+		}
+
+		return sb.toString();
 	}
 }

@@ -1,9 +1,11 @@
 package com.sc.showcal;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -31,6 +33,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -98,6 +101,10 @@ public class SearchScreen extends Activity {
 				.getParent().getParent()).findViewById(R.id.search_position))
 				.getText().toString());
 
+		// Tell the user the show is being added
+		Toast.makeText(getApplicationContext(),
+				"Adding to your shows. Please wait", Toast.LENGTH_LONG).show();
+
 		// get the TVRage ID of the show
 		new EpisodesServCon().execute(cards.get(position));
 	}
@@ -109,8 +116,10 @@ public class SearchScreen extends Activity {
 	// method for saving image of added show
 	public void saveImage(Card c) {
 		try {
-			FileOutputStream out = openFileOutput(c.getTitle() + ".jpg", 0);
-			c.getBitmap().compress(CompressFormat.JPEG, 100, out);
+			if (c.getBitmap() != null) {
+				FileOutputStream out = openFileOutput(c.getTitle() + ".jpg", 0);
+				c.getBitmap().compress(CompressFormat.JPEG, 100, out);
+			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -245,14 +254,14 @@ public class SearchScreen extends Activity {
 									.getString("air_time")));
 							long offset = cal.getTimeInMillis() + 19800000;
 							long runTime = jObject.getInt("runtime") * 60 * 1000;
-							
+
 							String TVRageID = jObject.getString("tvrage_id");
 
 							String poster = jObject.getJSONObject("images")
 									.getString("poster");
 
-							Card c = new Card(title, year, plot, offset, runTime,
-									TVRageID, poster);
+							Card c = new Card(title, year, plot, offset,
+									runTime, TVRageID, poster);
 							getImage(c);
 							publishProgress(c);
 
@@ -323,7 +332,7 @@ public class SearchScreen extends Activity {
 			}
 		}
 	}
-	
+
 	public String buildString(HttpResponse response)
 			throws IllegalStateException, IOException {
 		// create a buffered reader and build a string from the input
@@ -354,11 +363,11 @@ public class SearchScreen extends Activity {
 					"Adding to your shows. Please wait", Toast.LENGTH_LONG)
 					.show();
 		}
-		
+
 		@Override
 		protected Card doInBackground(Card... params) {
 			try {
-								
+
 				// get the relevant card
 				Card c = params[0];
 
@@ -368,14 +377,14 @@ public class SearchScreen extends Activity {
 						Strings.GET_EPISODES + c.getTVRageID()));
 				StatusLine statusLine = response.getStatusLine();
 				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-
+					
 					// create an xml pull parser to handle the data
 					XmlPullParserFactory factory = XmlPullParserFactory
 							.newInstance();
 					factory.setNamespaceAware(true);
 					XmlPullParser parser = factory.newPullParser();
-					parser.setInput(new InputStreamReader(response.getEntity()
-							.getContent()));
+					parser.setInput(new InputStreamReader(new ByteArrayInputStream(
+							buildString(response).getBytes())));
 
 					// fields we want to save
 					String airdate = "";
@@ -449,7 +458,7 @@ public class SearchScreen extends Activity {
 				e.printStackTrace();
 			}
 
-			return null;
+			return params[0];
 
 		}
 

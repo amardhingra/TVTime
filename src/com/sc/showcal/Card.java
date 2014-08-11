@@ -12,7 +12,6 @@ public class Card implements Serializable {
 	String years;
 	String rated;
 	String imdbID;
-	String type;
 	String plot;
 	String[] actors;
 	String[] genres;
@@ -24,15 +23,6 @@ public class Card implements Serializable {
 	long offset;
 	long runtime;
 	transient Bitmap bm;
-
-	public Card(String title, String imdbID, String years, String type) {
-		this.title = title;
-		this.imdbID = imdbID;
-		if (years.length() == 5)
-			years += "Present";
-		this.years = years;
-		this.type = type;
-	}
 
 	public Card(String title, String year, String plot, long offset, long runTime,
 			String TVRageID, String poster) {
@@ -76,14 +66,6 @@ public class Card implements Serializable {
 			this.years = years + "Present";
 		else
 			this.years = years;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
 	}
 
 	public String getRated() {
