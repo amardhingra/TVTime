@@ -17,5 +17,6 @@
     <string name="future_episodes">Future Episodes</string>
     <string name="no_more_shows">No Future Episodes</string>
     <string name="remember_choice">Remember my choice</string>
+    <string name="downloading">Downloading episodes</string>
 
 </resources>

@@ -38,6 +38,8 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Bitmap.CompressFormat;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -50,6 +52,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -104,6 +107,9 @@ public class SearchScreen extends Activity {
 		// Tell the user the show is being added
 		Toast.makeText(getApplicationContext(),
 				"Adding to your shows. Please wait", Toast.LENGTH_LONG).show();
+		
+		RelativeLayout rl = ((RelativeLayout) findViewById(R.id.loading_screen));
+		rl.setVisibility(View.VISIBLE);
 
 		// get the TVRage ID of the show
 		new EpisodesServCon().execute(cards.get(position));
