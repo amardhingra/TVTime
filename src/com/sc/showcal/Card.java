@@ -10,35 +10,33 @@ public class Card implements Serializable {
 	private static final long serialVersionUID = -232442193805075854L;
 	String title;
 	String years;
-	String rated;
-	String imdbID;
 	String plot;
-	String[] actors;
-	String[] genres;
+	String network;
 	ArrayList<Episode> episodes;
 	String posterLink;
-	int numberOfSeasons;
+	String bannerLink;
 	boolean addedToCalendar;
-	boolean inCalendar = false;
 	String TVRageID;
 	long offset;
 	long runtime;
 	transient Bitmap bm;
 
-	public Card(String title, String year, String plot, long offset, long runTime,
-			String TVRageID, String poster) {
+	public Card(String title, String year, String plot, String network, long offset,
+			long runTime, String TVRageID, String poster, String banner) {
 		this.title = title;
 		this.years = year + "-Present";
 		this.plot = plot;
+		this.network = network;
 		this.runtime = runTime;
 		this.offset = offset;
 		this.TVRageID = TVRageID;
 		this.posterLink = smallPoster(poster);
+		this.bannerLink = banner;
 	}
-	
-	private String smallPoster(String poster){
+
+	private String smallPoster(String poster) {
 		String[] split = poster.split(".jpg");
-		
+
 		return split[0] + "-300.jpg";
 	}
 
@@ -48,14 +46,6 @@ public class Card implements Serializable {
 
 	public void setTitle(String title) {
 		this.title = title;
-	}
-
-	public String getImdbID() {
-		return imdbID;
-	}
-
-	public void setImdbID(String imdbID) {
-		this.imdbID = imdbID;
 	}
 
 	public String getYears() {
@@ -69,14 +59,6 @@ public class Card implements Serializable {
 			this.years = years;
 	}
 
-	public String getRated() {
-		return rated;
-	}
-
-	public void setRated(String rated) {
-		this.rated = rated;
-	}
-	
 	public String getPlot() {
 		return plot;
 	}
@@ -86,22 +68,6 @@ public class Card implements Serializable {
 			this.plot = "";
 		else
 			this.plot = plot;
-	}
-
-	public String[] getActors() {
-		return actors;
-	}
-
-	public void setActors(String[] actors) {
-		this.actors = actors;
-	}
-
-	public String[] getGenres() {
-		return genres;
-	}
-
-	public void setGenres(String[] genres) {
-		this.genres = genres;
 	}
 
 	public String getPosterLink() {
@@ -122,14 +88,6 @@ public class Card implements Serializable {
 
 	public String toString() {
 		return title + " " + years;
-	}
-
-	public int getNumberOfSeasons() {
-		return numberOfSeasons;
-	}
-
-	public void setNumberOfSeasons(int numberOfSeasons) {
-		this.numberOfSeasons = numberOfSeasons;
 	}
 
 	public String getTVRageID() {

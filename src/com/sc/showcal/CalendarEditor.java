@@ -1,12 +1,16 @@
 package com.sc.showcal;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.TimeZone;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
+import android.provider.CalendarContract;
 import android.provider.CalendarContract.Events;
 import android.provider.CalendarContract.Reminders;
+import android.text.format.Time;
 
 public class CalendarEditor {
 

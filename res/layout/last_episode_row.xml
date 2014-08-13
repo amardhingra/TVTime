@@ -49,15 +49,8 @@
     <TableRow
         android:id="@+id/tableRow3"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="@color/white" >
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:background="@color/drop_shadow" />
+        android:layout_height="2dp"
+        android:background="@color/drop_shadow" >
     </TableRow>
 
 </LinearLayout>

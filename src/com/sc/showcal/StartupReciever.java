@@ -13,22 +13,20 @@ public class StartupReciever extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent i) {
 
-		
 		Intent intent = new Intent(context, BackgroundSync.class);
 		intent.setAction("com.sc.showcal.BACKGROUND_SYNC");
 
-		boolean alarmUp = (PendingIntent.getService(context, 0,
-				intent, PendingIntent.FLAG_NO_CREATE) != null);
+		boolean alarmUp = (PendingIntent.getService(context, 0, intent,
+				PendingIntent.FLAG_NO_CREATE) != null);
 
 		if (!alarmUp) {
 
-			
 			PendingIntent pintent = PendingIntent.getService(context, 0,
 					intent, 0);
 			AlarmManager alarm = (AlarmManager) context
 					.getSystemService(Context.ALARM_SERVICE);
 			alarm.setInexactRepeating(AlarmManager.RTC, Calendar.getInstance()
-					.getTimeInMillis(), AlarmManager.INTERVAL_DAY , pintent);
+					.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pintent);
 
 		}
 

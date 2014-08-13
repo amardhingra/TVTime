@@ -250,6 +250,7 @@ public class SearchScreen extends Activity {
 							String title = jObject.getString("title");
 							String year = jObject.getString("year");
 							String plot = jObject.getString("overview");
+							String network = jObject.getString("network");
 
 							cal.setTime(timeFormat.parse(jObject
 									.getString("air_time")));
@@ -261,8 +262,11 @@ public class SearchScreen extends Activity {
 							String poster = jObject.getJSONObject("images")
 									.getString("poster");
 
-							Card c = new Card(title, year, plot, offset,
-									runTime, TVRageID, poster);
+							String banner = jObject.getJSONObject("images")
+									.getString("banner");
+
+							Card c = new Card(title, year, plot, network,
+									offset, runTime, TVRageID, poster, banner);
 							getImage(c);
 							publishProgress(c);
 
@@ -322,7 +326,7 @@ public class SearchScreen extends Activity {
 
 	public void getImage(Card c) throws ClientProtocolException, IOException {
 		// Downloading the image and saving it to the card
-		if (c.getPosterLink().contains(".jpg")) {
+		if (c.posterLink != null) {
 			HttpResponse newResponse = new DefaultHttpClient()
 					.execute(new HttpGet(c.getPosterLink()));
 			StatusLine newStatusLine = newResponse.getStatusLine();
@@ -439,9 +443,10 @@ public class SearchScreen extends Activity {
 								// it
 								// to the card
 								else if (tag.equals("episode")) {
-									Date epDate = new Date(c.offset + StartScreen.dateFormat
-											.parse(airdate).getTime());
-									
+									Date epDate = new Date(c.offset
+											+ StartScreen.dateFormat.parse(
+													airdate).getTime());
+
 									if (epDate.compareTo(currentDate) > 0
 											|| epDate.compareTo(currentDate) == 0) {
 										c.addEpisode(new Episode(title,
@@ -453,6 +458,7 @@ public class SearchScreen extends Activity {
 							eventType = parser.next();
 						}
 						downloaded = true;
+
 						return c;
 					}
 

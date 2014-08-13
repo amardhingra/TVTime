@@ -38,26 +38,27 @@ public final class R {
         public static final int ic_launcher=0x7f020005;
     }
     public static final class id {
-        public static final int add_show=0x7f090021;
+        public static final int add_show=0x7f090023;
         public static final int button1=0x7f090016;
         public static final int card_container=0x7f090010;
         public static final int choice_checkbox=0x7f090009;
         public static final int container=0x7f090000;
-        public static final int description_single_show=0x7f090019;
+        public static final int description_single_show=0x7f09001b;
         public static final int description_tv_search=0x7f090014;
         public static final int episode_airdate_tv=0x7f09000d;
         public static final int episode_info_tv=0x7f09000c;
         public static final int episode_name_tv=0x7f09000a;
-        public static final int imageView1=0x7f09001f;
-        public static final int imageView2=0x7f09001d;
-        public static final int imageView3=0x7f09001c;
+        public static final int imageView1=0x7f090021;
+        public static final int imageView2=0x7f09001f;
+        public static final int imageView3=0x7f09001e;
         public static final int image_search=0x7f090015;
         public static final int image_single_show=0x7f09001a;
         public static final int loading_screen=0x7f090006;
         public static final int name_tv_search=0x7f090012;
         public static final int name_tv_single_show=0x7f090017;
+        public static final int network_tv=0x7f090019;
         public static final int no_show=0x7f090003;
-        public static final int position_tv_single_card=0x7f09001b;
+        public static final int position_tv_single_card=0x7f09001d;
         public static final int progressBar1=0x7f090007;
         public static final int scroller=0x7f090001;
         public static final int scroller_linear_layout=0x7f090002;
@@ -65,10 +66,11 @@ public final class R {
         public static final int searchBar=0x7f090005;
         public static final int search_position=0x7f090011;
         public static final int shows_tv=0x7f09000f;
-        public static final int spinner=0x7f090020;
+        public static final int spinner=0x7f090022;
         public static final int tableRow1=0x7f09000b;
+        public static final int tableRow2=0x7f09001c;
         public static final int tableRow3=0x7f09000e;
-        public static final int tableRow_button=0x7f09001e;
+        public static final int tableRow_button=0x7f090020;
         public static final int textView1=0x7f090008;
         public static final int years_tv_search=0x7f090013;
         public static final int years_tv_single_show=0x7f090018;
@@ -79,13 +81,14 @@ public final class R {
         public static final int calendar_selecter=0x7f030002;
         public static final int episode_row=0x7f030003;
         public static final int future_episodes=0x7f030004;
-        public static final int loading_table_row=0x7f030005;
-        public static final int my_shows=0x7f030006;
-        public static final int no_more_shows=0x7f030007;
-        public static final int search_screen_card=0x7f030008;
-        public static final int show_card=0x7f030009;
-        public static final int simple_card=0x7f03000a;
-        public static final int spinner_dialog=0x7f03000b;
+        public static final int last_episode_row=0x7f030005;
+        public static final int loading_table_row=0x7f030006;
+        public static final int my_shows=0x7f030007;
+        public static final int no_more_shows=0x7f030008;
+        public static final int search_screen_card=0x7f030009;
+        public static final int show_card=0x7f03000a;
+        public static final int simple_card=0x7f03000b;
+        public static final int spinner_dialog=0x7f03000c;
     }
     public static final class menu {
         public static final int main=0x7f080000;

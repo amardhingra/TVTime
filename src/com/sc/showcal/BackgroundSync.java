@@ -2,6 +2,7 @@ package com.sc.showcal;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -36,20 +37,15 @@ public class BackgroundSync extends IntentService {
 
 		SharedPreferences prefs = getSharedPreferences(Strings.PREFS_NAME, 0);
 
-		// ConnectivityManager connManager = (ConnectivityManager)
-		// getSystemService(Context.CONNECTIVITY_SERVICE);
-		// NetworkInfo mWifi = connManager
-		// .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
 		int numberOfShows = getSharedPreferences(Strings.PREFS_NAME, 0).getInt(
 				Strings.NUMBER_OF_SHOWS, 0);
 
 		String calendarId = prefs.getString(Strings.CALENDAR_ID, "-1");
 		if (calendarId.equals("-1"))
 			calendarId = prefs.getString(Strings.BACKGROUND_CAL_ID, "-1");
-
+		
 		if (numberOfShows > 0 && !prefs.getBoolean(Strings.IS_RUNNING, false)) {
-
+			
 			ArrayList<Card> cards = new ArrayList<Card>();
 
 			try {
@@ -93,7 +89,8 @@ public class BackgroundSync extends IntentService {
 							int seasonNumber = 1;
 
 							// current date
-							Date currentDate = new Date(
+							Date currentDate = 
+									new Date(
 									System.currentTimeMillis());
 
 							int eventType = parser.getEventType();
@@ -153,7 +150,7 @@ public class BackgroundSync extends IntentService {
 									&& !calendarId.equals("-1")
 									&& !oldEpisodes.toString().equals(
 											updatedEpisodes.toString())) {
-
+																
 								if (oldEpisodes != null)
 									for (Episode e : oldEpisodes) {
 										if (e.calenderID != null) {
@@ -179,6 +176,7 @@ public class BackgroundSync extends IntentService {
 								c.setEpisodes(updatedEpisodes);
 
 							}
+							downloaded = true;
 						}
 
 					} catch (ClientProtocolException e) {
@@ -194,8 +192,22 @@ public class BackgroundSync extends IntentService {
 					}
 				}
 			}
+			
+			ObjectOutputStream oos;
+			try {
+				oos = new ObjectOutputStream(openFileOutput(
+						"shows.dat", 0));
+				for (Card c : cards)
+					oos.writeObject(c);
+				oos.flush();
+				oos.close();
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 
-		} else if (prefs.getBoolean(Strings.UPDATED, false)) {
+		} else if (prefs.getBoolean(Strings.UPDATED, false) && numberOfShows > 0) {
 
 			try {
 

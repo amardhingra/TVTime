@@ -201,7 +201,10 @@ public class StartScreen extends Activity {
 
 		Card card = cards.get(position - 1);
 
-		if (prefs.getString(Strings.CALENDAR_ID, "-1").equals("-1")) {
+		if (card.addedToCalendar){
+			Toast.makeText(this, "Show already in calendar", Toast.LENGTH_SHORT).show();
+		}
+		else if (prefs.getString(Strings.CALENDAR_ID, "-1").equals("-1")) {
 			card.addedToCalendar = true;
 			showListView(position);
 		} else if (!card.addedToCalendar) {

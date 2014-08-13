@@ -72,6 +72,8 @@ public class SingleShowScreen extends Activity {
 				.setText(c.getYears());
 		((TextView) simpleCard.findViewById(R.id.description_single_show))
 				.setText(c.getPlot());
+		((TextView) simpleCard.findViewById(R.id.network_tv))
+		.setText(c.network);
 
 		// adding the image
 		ImageView im = ((ImageView) simpleCard
@@ -85,10 +87,13 @@ public class SingleShowScreen extends Activity {
 		// adding every episode under the main card
 		ArrayList<Episode> episodes = c.getEpisodes();
 		View row;
+		Episode e;
 		if (episodes != null && episodes.size() > 0){
 			scroller.addView(inflater.inflate(R.layout.future_episodes, null, false));
-			for (Episode e : episodes) {
+			for (int i = 0; i < episodes.size() - 1; i++) {
 				row = inflater.inflate(R.layout.episode_row, null, false);
+
+				e = episodes.get(i);
 				
 				// setting the relevant data
 				((TextView) row.findViewById(R.id.episode_info_tv)).setText(e
@@ -97,8 +102,22 @@ public class SingleShowScreen extends Activity {
 						.setText(e.title);
 				((TextView) row.findViewById(R.id.episode_airdate_tv))
 						.setText(formatDate(e.airDate));
-				scroller.addView(row);
+				scroller.addView(row);				
 			}
+			
+			row = inflater.inflate(R.layout.last_episode_row, null, false);
+
+			e = episodes.get(episodes.size() - 1);
+			
+			// setting the relevant data
+			((TextView) row.findViewById(R.id.episode_info_tv)).setText(e
+					.getInfo());
+			((TextView) row.findViewById(R.id.episode_name_tv))
+					.setText(e.title);
+			((TextView) row.findViewById(R.id.episode_airdate_tv))
+					.setText(formatDate(e.airDate));
+			scroller.addView(row);	
+			
 		}
 		else{
 			row = inflater.inflate(R.layout.no_more_shows, null, false);
