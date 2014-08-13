@@ -106,8 +106,8 @@ public class SearchScreen extends Activity {
 
 		// Tell the user the show is being added
 		Toast.makeText(getApplicationContext(),
-				"Adding to your shows. Please wait", Toast.LENGTH_LONG).show();
-		
+				"Adding to your shows. Please wait", Toast.LENGTH_SHORT).show();
+
 		RelativeLayout rl = ((RelativeLayout) findViewById(R.id.loading_screen));
 		rl.setVisibility(View.VISIBLE);
 
@@ -238,11 +238,6 @@ public class SearchScreen extends Activity {
 				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
 
 					// create a JSONObject from the input
-					// JSONObject jObject = new
-					// JSONObject(buildString(response));
-					// get an array of the search results
-					// JSONArray jArray = jObject.getJSONArray("Search");
-
 					JSONArray jArray = new JSONArray(buildString(response));
 					SimpleDateFormat timeFormat = new SimpleDateFormat("h:mma");
 					Calendar cal = Calendar.getInstance();
@@ -372,96 +367,106 @@ public class SearchScreen extends Activity {
 
 		@Override
 		protected Card doInBackground(Card... params) {
-			try {
 
-				// get the relevant card
-				Card c = params[0];
+			boolean downloaded = false;
+			while (!downloaded) {
+				try {
+					// get the relevant card
+					Card c = params[0];
 
-				// create a http request
-				HttpClient httpclient = new DefaultHttpClient();
-				HttpResponse response = httpclient.execute(new HttpGet(
-						Strings.GET_EPISODES + c.getTVRageID()));
-				StatusLine statusLine = response.getStatusLine();
-				if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-					
-					// create an xml pull parser to handle the data
-					XmlPullParserFactory factory = XmlPullParserFactory
-							.newInstance();
-					factory.setNamespaceAware(true);
-					XmlPullParser parser = factory.newPullParser();
-					parser.setInput(new InputStreamReader(new ByteArrayInputStream(
-							buildString(response).getBytes())));
+					// create a http request
+					HttpClient httpclient = new DefaultHttpClient();
+					HttpResponse response = httpclient.execute(new HttpGet(
+							Strings.GET_EPISODES + c.getTVRageID()));
+					StatusLine statusLine = response.getStatusLine();
+					if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
 
-					// fields we want to save
-					String airdate = "";
-					String episodeNumber = "";
-					String title = "";
-					int seasonNumber = 1;
+						// create an xml pull parser to handle the data
+						XmlPullParserFactory factory = XmlPullParserFactory
+								.newInstance();
+						factory.setNamespaceAware(true);
+						XmlPullParser parser = factory.newPullParser();
+						parser.setInput(new InputStreamReader(
+								new ByteArrayInputStream(buildString(response)
+										.getBytes())));
 
-					// current date to compare with the episodes
-					Date currentDate = new Date(System.currentTimeMillis());
+						// fields we want to save
+						String airdate = "";
+						String episodeNumber = "";
+						String title = "";
+						int seasonNumber = 1;
 
-					int eventType = parser.getEventType();
+						// current date to compare with the episodes
+						Date currentDate = new Date(System.currentTimeMillis());
 
-					while (eventType != XmlPullParser.END_DOCUMENT) {
+						int eventType = parser.getEventType();
 
-						if (eventType == XmlPullParser.START_TAG) {
-							String tag = parser.getName();
+						while (eventType != XmlPullParser.END_DOCUMENT) {
 
-							// save each episode number
-							if (tag.equals("seasonnum")) {
-								parser.next();
-								episodeNumber = parser.getText();
+							if (eventType == XmlPullParser.START_TAG) {
+								String tag = parser.getName();
+
+								// save each episode number
+								if (tag.equals("seasonnum")) {
+									parser.next();
+									episodeNumber = parser.getText();
+								}
+								// save each air date
+								else if (tag.equals("airdate")) {
+									parser.next();
+									airdate = parser.getText();
+								}
+								// save each title
+								else if (tag.equals("title")) {
+									parser.next();
+									title = parser.getText();
+								}
+								// break on special episodes
+								else if (tag.equals("Special")) {
+									break;
+								}
+
+							} else if (eventType == XmlPullParser.END_TAG) {
+								String tag = parser.getName();
+
+								// if we have reached the end of a season
+								// increment
+								// the counter
+								if (tag.equals("Season")) {
+									seasonNumber++;
+								}
+								// if we have reached the end of an episode save
+								// it
+								// to the card
+								else if (tag.equals("episode")) {
+									Date epDate = new Date(c.offset + StartScreen.dateFormat
+											.parse(airdate).getTime());
+									
+									if (epDate.compareTo(currentDate) > 0
+											|| epDate.compareTo(currentDate) == 0) {
+										c.addEpisode(new Episode(title,
+												airdate, seasonNumber,
+												Integer.parseInt(episodeNumber)));
+									}
+								}
 							}
-							// save each air date
-							else if (tag.equals("airdate")) {
-								parser.next();
-								airdate = parser.getText();
-							}
-							// save each title
-							else if (tag.equals("title")) {
-								parser.next();
-								title = parser.getText();
-							}
-							// break on special episodes
-							else if (tag.equals("Special")) {
-								break;
-							}
-
-						} else if (eventType == XmlPullParser.END_TAG) {
-							String tag = parser.getName();
-
-							// if we have reached the end of a season increment
-							// the counter
-							if (tag.equals("Season")) {
-								seasonNumber++;
-							}
-							// if we have reached the end of an episode save it
-							// to the card
-							else if (tag.equals("episode")) {
-								if (StartScreen.dateFormat.parse(airdate)
-										.compareTo(currentDate) > 0)
-									c.addEpisode(new Episode(title, airdate,
-											seasonNumber, Integer
-													.parseInt(episodeNumber)));
-							}
+							eventType = parser.next();
 						}
-						eventType = parser.next();
+						downloaded = true;
+						return c;
 					}
 
-					return c;
+				} catch (ClientProtocolException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (XmlPullParserException e) {
+					e.printStackTrace();
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				} catch (ParseException e) {
+					e.printStackTrace();
 				}
-
-			} catch (ClientProtocolException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (XmlPullParserException e) {
-				e.printStackTrace();
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
-			} catch (ParseException e) {
-				e.printStackTrace();
 			}
 
 			return params[0];
