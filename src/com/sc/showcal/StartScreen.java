@@ -20,6 +20,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.CalendarContract.Calendars;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -60,7 +61,7 @@ public class StartScreen extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_scroller);
-
+		
 		// initializing the views
 		pressButton = (TextView) findViewById(R.id.no_show);
 		scroller = (LinearLayout) findViewById(R.id.scroller_linear_layout);
@@ -168,7 +169,7 @@ public class StartScreen extends Activity {
 
 		int currentNumberOfShows = prefs.getInt(Strings.NUMBER_OF_SHOWS, 0);
 		loadCards(currentNumberOfShows);
-		
+
 		// removing the card from the arraylist of cards
 		Card c = cards.remove(position - 1);
 
@@ -201,10 +202,10 @@ public class StartScreen extends Activity {
 
 		Card card = cards.get(position - 1);
 
-		if (card.addedToCalendar){
-			Toast.makeText(this, "Show already in calendar", Toast.LENGTH_SHORT).show();
-		}
-		else if (prefs.getString(Strings.CALENDAR_ID, "-1").equals("-1")) {
+		if (card.addedToCalendar) {
+			Toast.makeText(this, "Show already in calendar", Toast.LENGTH_SHORT)
+					.show();
+		} else if (prefs.getString(Strings.CALENDAR_ID, "-1").equals("-1")) {
 			card.addedToCalendar = true;
 			showListView(position);
 		} else if (!card.addedToCalendar) {
@@ -405,6 +406,10 @@ public class StartScreen extends Activity {
 		// automatically handle clicks on the Home/Up button, so long
 		// as you specify a parent activity in AndroidManifest.xml.
 		int id = item.getItemId();
+		if (id == R.id.action_settings) {
+			Intent settings = new Intent(this, Settings.class);
+			startActivity(settings);
+		}
 		if (id == R.id.add_show) {
 			Intent searchScreen = new Intent(this, SearchScreen.class);
 			startActivity(searchScreen);

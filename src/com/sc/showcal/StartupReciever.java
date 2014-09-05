@@ -25,8 +25,8 @@ public class StartupReciever extends BroadcastReceiver {
 					intent, 0);
 			AlarmManager alarm = (AlarmManager) context
 					.getSystemService(Context.ALARM_SERVICE);
-			alarm.setRepeating(AlarmManager.RTC, Calendar.getInstance()
-					.getTimeInMillis(), 2 * 24 * 3600 * 1000, pintent);
+			alarm.setInexactRepeating(AlarmManager.RTC, Calendar.getInstance()
+					.getTimeInMillis(), AlarmManager.INTERVAL_DAY, pintent);
 
 		}
 

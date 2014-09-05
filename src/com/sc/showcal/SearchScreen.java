@@ -44,7 +44,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -515,7 +514,6 @@ public class SearchScreen extends Activity {
 	@Override
 	protected void onPause() {
 		super.onPause();
-		// Log.i("com.sc.showcal", "SearchScreen onPause()");
 		getSharedPreferences(Strings.PREFS_NAME, 0).edit()
 				.putBoolean(Strings.IS_RUNNING, false).apply();
 	}
@@ -523,7 +521,6 @@ public class SearchScreen extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		// Log.i("com.sc.showcal", "SearchScreen onResume()");
 		getSharedPreferences(Strings.PREFS_NAME, 0).edit()
 				.putBoolean(Strings.IS_RUNNING, true).apply();
 	}

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+    <ListPreference android:entries="@array/minutes_desc"
+        android:entryValues="@array/minutes"
+        android:key="minutes"
+        android:dialogTitle="Reminder"
+        android:title="Reminder time"/>
+    
+
+</PreferenceScreen>

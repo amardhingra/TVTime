@@ -1,16 +1,12 @@
 package com.sc.showcal;
 
-import java.util.Arrays;
 import java.util.Date;
-import java.util.TimeZone;
 
 import android.content.ContentValues;
 import android.content.Context;
 import android.net.Uri;
-import android.provider.CalendarContract;
 import android.provider.CalendarContract.Events;
 import android.provider.CalendarContract.Reminders;
-import android.text.format.Time;
 
 public class CalendarEditor {
 
@@ -38,7 +34,7 @@ public class CalendarEditor {
 		values.clear();
 		values.put(Reminders.EVENT_ID, calURI.getLastPathSegment());
 		values.put(Reminders.METHOD, Reminders.METHOD_ALERT);
-		values.put(Reminders.MINUTES, 0);
+		values.put(Reminders.MINUTES, 15);
 		context.getContentResolver().insert(Reminders.CONTENT_URI, values);
 
 		//System.out.println("addEvent called " + calURI.getLastPathSegment());

@@ -23,8 +23,11 @@ import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import android.app.IntentService;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 public class BackgroundSync extends IntentService {
 
@@ -44,7 +47,10 @@ public class BackgroundSync extends IntentService {
 		if (calendarId.equals("-1"))
 			calendarId = prefs.getString(Strings.BACKGROUND_CAL_ID, "-1");
 		
-		if (numberOfShows > 0 && !prefs.getBoolean(Strings.IS_RUNNING, false)) {
+		ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+		NetworkInfo ni = cm.getActiveNetworkInfo();
+		
+		if (numberOfShows > 0 && !prefs.getBoolean(Strings.IS_RUNNING, false) && ni != null && ni.isConnected()) {
 			
 			ArrayList<Card> cards = new ArrayList<Card>();
 
